@@ -1,6 +1,5 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
 import React, { useRef, useLayoutEffect } from "react";
 import Link from "next/link";
 import gsap from "gsap";
@@ -20,33 +19,36 @@ export default function HomePage() {
     const ctx = gsap.context(() => {
       const sections = gsap.utils.toArray<HTMLElement>(".story-section");
 
+      // Pin the main container to create the "sticky" effect
       ScrollTrigger.create({
         trigger: mainRef.current,
         start: "top top",
-        end: `+=${(sections.length - 1) * 100}%`,
+        end: `+=${(sections.length - 1) * 100}%`, // Pin for the duration of all sections
         pin: true,
       });
 
+      // Animate each section in and out
       sections.forEach((section, index) => {
         gsap.timeline({
           scrollTrigger: {
             trigger: mainRef.current,
-            start: `top+=${index * 100}% top`,
-            end: `top+=${(index + 1) * 100}% top`,
-            scrub: 1,
+            start: `top+=${index * 100}% top`, // Starts when the section's "turn" comes
+            end: `top+=${(index + 1) * 100}% top`, // Ends when the next section starts
+            scrub: 1, // Smoothly animates with scroll
           }
         })
         .fromTo(section, { autoAlpha: 0, scale: 0.95 }, { autoAlpha: 1, scale: 1, ease: "power2.inOut" })
-        .to(section, { autoAlpha: 0, scale: 0.95, ease: "power2.inOut" }, ">0.5");
+        .to(section, { autoAlpha: 0, scale: 0.95, ease: "power2.inOut" }, ">0.5"); // Fade out after a delay
       });
 
     }, mainRef);
 
-    return () => ctx.revert();
+    return () => ctx.revert(); // Cleanup GSAP animations
   }, []);
 
   return (
     <main ref={mainRef}>
+      {/* This container needs a height relative to the number of sections to create the scrollable area */}
       <div className="relative" style={{ height: `${(4) * 100}vh` }}>
         
         {/* Section 1: The Title */}
