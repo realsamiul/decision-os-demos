@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import React, { useRef, useState, useEffect, useLayoutEffect } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Area, AreaChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis, CartesianGrid } from 'recharts';
 import Image from "next/image";
 
-// A simple, styled Tabs component implementation to match the required aesthetic
+// Placeholder for Tabs
 const Tabs = ({ children, defaultValue }: { children: React.ReactNode; defaultValue: string; }) => {
     const [activeTab, setActiveTab] = useState(defaultValue);
     return <div>{React.Children.map(children, (child) => React.cloneElement(child as React.ReactElement, { activeTab, setActiveTab }))}</div>;
@@ -14,54 +15,73 @@ const TabsList = ({ children, activeTab, setActiveTab }: { children: React.React
 const TabsTrigger = ({ children, value, activeTab, setActiveTab }: { children: React.ReactNode; value: string; activeTab: string; setActiveTab: (value: string) => void; }) => <button onClick={() => setActiveTab(value)} className={`w-full px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === value ? 'bg-white text-black' : 'text-gray-400 hover:bg-gray-800'}`}>{children}</button>;
 const TabsContent = ({ children, value, activeTab }: { children: React.ReactNode; value: string; activeTab: string; }) => <div className={`mt-4 ${activeTab === value ? 'block' : 'hidden'}`}>{children}</div>;
 
+
 // Main Page Component
 export default function FreightPage() {
-  const targetRef = useRef<HTMLDivElement | null>(null);
-  const { scrollYProgress } = useScroll({ target: targetRef });
+  const mainRef = useRef<HTMLDivElement>(null);
   const [showResults, setShowResults] = useState(false);
 
+  useLayoutEffect(() => {
+    if (!mainRef.current) return;
+    
+    const ctx = gsap.context(() => {
+      const sections = gsap.utils.toArray<HTMLElement>(".story-section");
+
+      // Pin the main container
+      ScrollTrigger.create({
+        trigger: mainRef.current,
+        start: "top top",
+        end: `+=${(sections.length - 1) * 100}%`,
+        pin: true,
+      });
+
+      // Animate sections
+      sections.forEach((section, index) => {
+        gsap.timeline({
+          scrollTrigger: {
+            trigger: mainRef.current,
+            start: `top+=${index * 100}% top`,
+            end: `top+=${(index + 1) * 100}% top`,
+            scrub: 1,
+          }
+        })
+        .fromTo(section, { autoAlpha: 0, scale: 0.95 }, { autoAlpha: 1, scale: 1, ease: "power2.inOut" })
+        .to(section, { autoAlpha: 0, scale: 0.95, ease: "power2.inOut" }, ">0.5");
+      });
+
+    }, mainRef);
+
+    return () => ctx.revert();
+  }, []);
+
   return (
-    <main>
-      <div ref={targetRef} style={{ height: '400vh' }}>
-        <div className="sticky top-0 h-screen overflow-hidden">
-          <StorySection scrollYProgress={scrollYProgress} start={0.0} end={0.15}>
+    <main ref={mainRef}>
+      <div className="relative" style={{ height: `${(4) * 100}vh` }}>
+        <div className="w-full h-screen absolute top-0 left-0 story-section flex flex-col justify-center items-center text-center p-8">
             <h1 className="text-6xl md:text-8xl font-bold tracking-tighter">The Rosetta Stone.</h1>
             <p className="text-xl md:text-2xl text-gray-400">Our flagship story of intellectual honesty and breakthrough.</p>
-          </StorySection>
-          <StorySection scrollYProgress={scrollYProgress} start={0.18} end={0.33}>
+        </div>
+        <div className="w-full h-screen absolute top-0 left-0 story-section flex flex-col justify-center items-center text-center p-8">
             <h2 className="text-4xl md:text-6xl font-bold tracking-tighter">The Chimera.</h2>
             <p className="text-lg text-gray-400 mt-4 max-w-2xl">Our first model achieved a misleading 98% accuracy on simulated data. A beautiful, useless illusion.</p>
             <div className="mt-8 w-full max-w-4xl p-4 border border-gray-800 rounded-lg bg-gray-900/50"><Image src="https://placehold.co/1200x600/000000/333333?text=Perfect+Prediction+(Illusion)" alt="Perfect prediction chart" width={1200} height={600} className="rounded" /></div>
-          </StorySection>
-          <StorySection scrollYProgress={scrollYProgress} start={0.36} end={0.51}>
+        </div>
+        <div className="w-full h-screen absolute top-0 left-0 story-section flex flex-col justify-center items-center text-center p-8">
             <h2 className="text-4xl md:text-6xl font-bold tracking-tighter">The Abyss.</h2>
             <p className="text-lg text-gray-400 mt-4 max-w-2xl">On real data, the model collapsed, producing negative R² scores. This failure was our most valuable discovery.</p>
             <div className="mt-8 w-full max-w-4xl p-4 border border-gray-800 rounded-lg bg-gray-900/50"><Image src="https://placehold.co/1200x600/000000/333333?text=Chaotic+Prediction+(Failure)" alt="Chaotic prediction chart" width={1200} height={600} className="rounded" /></div>
-          </StorySection>
-          <RevealSection scrollYProgress={scrollYProgress} start={0.55}>
-            <div className="w-full max-w-6xl mx-auto text-center">
+        </div>
+        <div className="w-full h-screen absolute top-0 left-0 story-section flex flex-col justify-center items-center text-center p-8">
+            <div className="w-full max-w-6xl mx-auto">
               <h2 className="text-4xl md:text-6xl font-bold tracking-tighter">The Breakthrough.</h2>
               <p className="text-lg text-gray-400 mt-4 mb-12 max-w-3xl mx-auto">The discovery of a proprietary feature, the "Trade Imbalance Ratio," gave us a real, defensible edge.</p>
-              {!showResults && (<motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={() => setShowResults(true)} className="px-8 py-4 bg-white text-black font-semibold rounded-full text-lg hover:bg-gray-200 transition-colors">Reveal The Mini-Dashboard</motion.button>)}
-              {showResults && (<motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, ease: "easeOut" }} className="bg-[#0A0A0A] border border-gray-800 rounded-xl p-6 md:p-8"><MiniDashboard /></motion.div>)}
+              {!showResults && (<button onClick={() => setShowResults(true)} className="px-8 py-4 bg-white text-black font-semibold rounded-full text-lg hover:bg-gray-200 transition-colors">Reveal The Mini-Dashboard</button>)}
+              {showResults && (<div className="bg-[#0A0A0A] border border-gray-800 rounded-xl p-6 md:p-8"><MiniDashboard /></div>)}
             </div>
-          </RevealSection>
         </div>
       </div>
     </main>
   );
-}
-
-// Reusable Animated Section Components
-function StorySection({ children, scrollYProgress, start, end }: { children: React.ReactNode, scrollYProgress: any, start: number, end: number }) {
-  const opacity = useTransform(scrollYProgress, [start, (start + end) / 2, end], [0, 1, 0]);
-  const scale = useTransform(scrollYProgress, [start, (start + end) / 2, end], [0.95, 1, 0.95]);
-  return (<motion.div style={{ opacity, scale }} className="h-screen w-full flex flex-col justify-center items-center text-center p-8 absolute top-0"><div className="max-w-4xl">{children}</div></motion.div>);
-}
-function RevealSection({ children, scrollYProgress, start }: { children: React.ReactNode, scrollYProgress: any, start: number }) {
-    const scale = useTransform(scrollYProgress, [start, start + 0.2], [0.9, 1]);
-    const opacity = useTransform(scrollYProgress, [start, start + 0.2], [0, 1]);
-    return (<motion.div style={{ scale, opacity }} className="h-screen w-full flex flex-col justify-center items-center p-8 absolute top-0"><div className="w-full">{children}</div></motion.div>);
 }
 
 // Mini-Dashboard Component
@@ -95,12 +115,11 @@ function MiniDashboard() {
         </div>
     );
 }
-
-function StatCard({ title, value }: { title: string, value: string }) { return (<div className="flex justify-between items-baseline p-2 bg-black rounded"><p className="text-sm text-gray-400">{title}</p><p className="text-xl font-bold">{value}</p></div>); }
+function StatCard({ title, value }: { title: string; value: string; }) { return (<div className="flex justify-between items-baseline p-2 bg-black rounded"><p className="text-sm text-gray-400">{title}</p><p className="text-xl font-bold">{value}</p></div>); }
 
 // Chart Component
 interface ForecastData { date: string; actual: number | null; predicted: number | null; }
-function FinalChart({ dataUrl }: { dataUrl: string }) {
+function FinalChart({ dataUrl }: { dataUrl: string; }) {
   const [data, setData] = useState<ForecastData[]>([]);
   useEffect(() => {
     fetch(dataUrl).then(response => response.text()).then(csvText => {
