@@ -1,21 +1,19 @@
 "use client";
-import { ReactLenis, useLenis } from "lenis/react";
+import { ReactLenis } from "lenis/react";
 import { useEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-gsap.registerPlugin(ScrollTrigger);
+// This registration is crucial for GSAP and Lenis to work together
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 export function LenisProvider({ children }: { children: React.ReactNode }) {
-  const lenis = useLenis(({ scroll }) => {
-    // Optional: callback for scroll events
-  });
-
   useEffect(() => {
-    if (lenis) {
-      ScrollTrigger.refresh();
-    }
-  }, [lenis]);
-
+    // This ensures ScrollTrigger is aware of any updates
+    ScrollTrigger.refresh();
+  }, []);
+  
   return <ReactLenis root>{children}</ReactLenis>;
 }
