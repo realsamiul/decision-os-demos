@@ -6,7 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Area, AreaChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis, CartesianGrid } from 'recharts';
 import Image from "next/image";
 
-// A simple, styled Tabs component implementation
+// A simple, styled Tabs component implementation with proper TypeScript types
 const Tabs = ({ children, defaultValue }: { children: React.ReactNode; defaultValue: string; }) => {
     const [activeTab, setActiveTab] = useState(defaultValue);
     return <div>{React.Children.map(children, (child) => React.cloneElement(child as React.ReactElement, { activeTab, setActiveTab }))}</div>;
@@ -24,7 +24,6 @@ export default function FreightPage() {
   useLayoutEffect(() => {
     if (!mainRef.current) return;
     
-    // Ensure GSAP and ScrollTrigger are available in the browser
     if (typeof window !== "undefined") {
       gsap.registerPlugin(ScrollTrigger);
     }
@@ -77,7 +76,7 @@ export default function FreightPage() {
         <div className="w-full h-screen absolute top-0 left-0 story-section flex flex-col justify-center items-center text-center p-8">
             <div className="w-full max-w-6xl mx-auto">
               <h2 className="text-4xl md:text-6xl font-bold tracking-tighter">The Breakthrough.</h2>
-              <p className="text-lg text-gray-400 mt-4 mb-12 max-w-3xl mx-auto">The discovery of a proprietary feature, the 'Trade Imbalance Ratio,' gave us a real, defensible edge.</p>
+              <p className="text-lg text-gray-400 mt-4 mb-12 max-w-3xl mx-auto">The discovery of a proprietary feature, the &apos;Trade Imbalance Ratio,&apos; gave us a real, defensible edge.</p>
               {!showResults && (<button onClick={() => setShowResults(true)} className="px-8 py-4 bg-white text-black font-semibold rounded-full text-lg hover:bg-gray-200 transition-colors">Reveal The Mini-Dashboard</button>)}
               {showResults && (<div className="bg-[#0A0A0A] border border-gray-800 rounded-xl p-6 md:p-8"><MiniDashboard /></div>)}
             </div>
@@ -89,7 +88,14 @@ export default function FreightPage() {
 
 // Mini-Dashboard Component
 function MiniDashboard() {
-    const [metrics, setMetrics] = useState<any>(null); // Using 'any' here for simplicity, can be typed further
+    // Define a specific type for the metrics object
+    interface PerformanceMetrics {
+        [model: string]: {
+            '7_day': { R2: number; MAE: number };
+            '14_day': { R2: number; MAE: number };
+        };
+    }
+    const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null);
     useEffect(() => { fetch('/atlas_v2_results_20250923_001400.json').then(res => res.json()).then(data => { setMetrics(data.performance_metrics); }); }, []);
     if (!metrics) return <div className="h-[500px] flex justify-center items-center"><p>Loading Dashboard Data...</p></div>;
     return (
@@ -128,9 +134,10 @@ function FinalChart({ dataUrl }: { dataUrl: string; }) {
     fetch(dataUrl).then(response => response.text()).then(csvText => {
         const lines = csvText.trim().split('\n'); const headers = lines[0].split(',').map(h => h.trim());
         const chartData = lines.slice(1).map(line => {
-          const values = line.split(','); const entry: any = {}; // 'any' is acceptable in this local scope
+          const values = line.split(','); 
+          const entry: {[key: string]: string | number | null} = {};
           headers.forEach((header, index) => { const value = parseFloat(values[index]); entry[header] = isNaN(value) ? null : value; });
-          return { date: entry.date, actual: entry.actual, predicted: entry.predicted };
+          return { date: entry.date as string, actual: entry.actual as number | null, predicted: entry.predicted as number | null };
         });
         setData(chartData);
       });
