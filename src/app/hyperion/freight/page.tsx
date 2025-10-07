@@ -9,9 +9,9 @@ import Image from "next/image";
 // A simple, styled Tabs component implementation with proper TypeScript types
 const Tabs = ({ children, defaultValue }: { children: React.ReactNode; defaultValue: string; }) => {
     const [activeTab, setActiveTab] = useState(defaultValue);
-    return <div>{React.Children.map(children, (child) => React.cloneElement(child as React.ReactElement, { activeTab, setActiveTab }))}</div>;
+    return <div>{React.Children.map(children, (child) => React.cloneElement(child as React.ReactElement<any>, { activeTab, setActiveTab }))}</div>;
 };
-const TabsList = ({ children, activeTab, setActiveTab }: { children: React.ReactNode; activeTab: string; setActiveTab: (value: string) => void; }) => <div className="grid w-full grid-cols-3 bg-gray-900 p-1 rounded-lg">{React.Children.map(children, (child) => React.cloneElement(child as React.ReactElement, { activeTab, setActiveTab }))}</div>;
+const TabsList = ({ children, activeTab, setActiveTab }: { children: React.ReactNode; activeTab: string; setActiveTab: (value: string) => void; }) => <div className="grid w-full grid-cols-3 bg-gray-900 p-1 rounded-lg">{React.Children.map(children, (child) => React.cloneElement(child as React.ReactElement<any>, { activeTab, setActiveTab }))}</div>;
 const TabsTrigger = ({ children, value, activeTab, setActiveTab }: { children: React.ReactNode; value: string; activeTab: string; setActiveTab: (value: string) => void; }) => <button onClick={() => setActiveTab(value)} className={`w-full px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === value ? 'bg-white text-black' : 'text-gray-400 hover:bg-gray-800'}`}>{children}</button>;
 const TabsContent = ({ children, value, activeTab }: { children: React.ReactNode; value: string; activeTab: string; }) => <div className={`mt-4 ${activeTab === value ? 'block' : 'hidden'}`}>{children}</div>;
 
