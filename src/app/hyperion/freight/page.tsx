@@ -1,22 +1,46 @@
 "use client";
 
-import React, { useRef, useState, useEffect, useLayoutEffect } from "react";
+import React, { useRef, useState, useEffect, useLayoutEffect, createContext, useContext } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Area, AreaChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis, CartesianGrid } from 'recharts';
 import Image from "next/image";
 
-// A simple, styled Tabs component implementation with proper TypeScript types
+// --- START: Production-Ready Tabs Component ---
+interface TabsContextProps {
+  activeTab: string;
+  setActiveTab: (value: string) => void;
+}
+const TabsContext = createContext<TabsContextProps | null>(null);
+
+const useTabs = () => {
+  const context = useContext(TabsContext);
+  if (!context) {
+    throw new Error("useTabs must be used within a TabsProvider");
+  }
+  return context;
+};
+
 const Tabs = ({ children, defaultValue }: { children: React.ReactNode; defaultValue: string; }) => {
     const [activeTab, setActiveTab] = useState(defaultValue);
-    return <div>{React.Children.map(children, (child) => React.cloneElement(child as React.ReactElement<any>, { activeTab, setActiveTab }))}</div>;
+    return <TabsContext.Provider value={{ activeTab, setActiveTab }}>{children}</TabsContext.Provider>;
 };
-const TabsList = ({ children, activeTab, setActiveTab }: { children: React.ReactNode; activeTab: string; setActiveTab: (value: string) => void; }) => <div className="grid w-full grid-cols-3 bg-gray-900 p-1 rounded-lg">{React.Children.map(children, (child) => React.cloneElement(child as React.ReactElement<any>, { activeTab, setActiveTab }))}</div>;
-const TabsTrigger = ({ children, value, activeTab, setActiveTab }: { children: React.ReactNode; value: string; activeTab: string; setActiveTab: (value: string) => void; }) => <button onClick={() => setActiveTab(value)} className={`w-full px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === value ? 'bg-white text-black' : 'text-gray-400 hover:bg-gray-800'}`}>{children}</button>;
-const TabsContent = ({ children, value, activeTab }: { children: React.ReactNode; value: string; activeTab: string; }) => <div className={`mt-4 ${activeTab === value ? 'block' : 'hidden'}`}>{children}</div>;
+
+const TabsList = ({ children }: { children: React.ReactNode; }) => <div className="grid w-full grid-cols-3 bg-gray-900 p-1 rounded-lg">{children}</div>;
+
+const TabsTrigger = ({ children, value }: { children: React.ReactNode; value: string; }) => {
+    const { activeTab, setActiveTab } = useTabs();
+    return <button onClick={() => setActiveTab(value)} className={`w-full px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === value ? 'bg-white text-black' : 'text-gray-400 hover:bg-gray-800'}`}>{children}</button>;
+};
+
+const TabsContent = ({ children, value }: { children: React.ReactNode; value: string; }) => {
+    const { activeTab } = useTabs();
+    return <div className={`mt-4 ${activeTab === value ? 'block' : 'hidden'}`}>{children}</div>;
+};
+// --- END: Production-Ready Tabs Component ---
 
 
-// Main Page Component
+// --- Main Page Component ---
 export default function FreightPage() {
   const mainRef = useRef<HTMLDivElement>(null);
   const [showResults, setShowResults] = useState(false);
@@ -88,7 +112,6 @@ export default function FreightPage() {
 
 // Mini-Dashboard Component
 function MiniDashboard() {
-    // Define a specific type for the metrics object
     interface PerformanceMetrics {
         [model: string]: {
             '7_day': { R2: number; MAE: number };
