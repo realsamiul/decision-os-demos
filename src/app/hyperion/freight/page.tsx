@@ -6,7 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Area, AreaChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis, CartesianGrid } from 'recharts';
 import Image from "next/image";
 
-// Placeholder for Tabs
+// A simple, styled Tabs component implementation
 const Tabs = ({ children, defaultValue }: { children: React.ReactNode; defaultValue: string; }) => {
     const [activeTab, setActiveTab] = useState(defaultValue);
     return <div>{React.Children.map(children, (child) => React.cloneElement(child as React.ReactElement, { activeTab, setActiveTab }))}</div>;
@@ -24,10 +24,14 @@ export default function FreightPage() {
   useLayoutEffect(() => {
     if (!mainRef.current) return;
     
+    // Ensure GSAP and ScrollTrigger are available in the browser
+    if (typeof window !== "undefined") {
+      gsap.registerPlugin(ScrollTrigger);
+    }
+
     const ctx = gsap.context(() => {
       const sections = gsap.utils.toArray<HTMLElement>(".story-section");
 
-      // Pin the main container
       ScrollTrigger.create({
         trigger: mainRef.current,
         start: "top top",
@@ -35,7 +39,6 @@ export default function FreightPage() {
         pin: true,
       });
 
-      // Animate sections
       sections.forEach((section, index) => {
         gsap.timeline({
           scrollTrigger: {
@@ -69,12 +72,12 @@ export default function FreightPage() {
         <div className="w-full h-screen absolute top-0 left-0 story-section flex flex-col justify-center items-center text-center p-8">
             <h2 className="text-4xl md:text-6xl font-bold tracking-tighter">The Abyss.</h2>
             <p className="text-lg text-gray-400 mt-4 max-w-2xl">On real data, the model collapsed, producing negative R² scores. This failure was our most valuable discovery.</p>
-            <div className="mt-8 w-full max-w-4xl p-4 border border-gray-800 rounded-lg bg-gray-900/50"><Image src="https://placehold.co/1200x600/000000/333333?text=Chaotic+Prediction+(Failure)" alt="Chaotic prediction chart" width={1200} height={600} className="rounded" /></div>
+            <div className="mt-8 w-full max-w-4xl p-4 border border-gray-800 rounded-lg bg-gray-900/50"><Image src="https://placehold.co/1200x600/000000/333333?text=Chaotic+Prediction+(Failure)" alt="Chaotic and failed prediction chart" width={1200} height={600} className="rounded" /></div>
         </div>
         <div className="w-full h-screen absolute top-0 left-0 story-section flex flex-col justify-center items-center text-center p-8">
             <div className="w-full max-w-6xl mx-auto">
               <h2 className="text-4xl md:text-6xl font-bold tracking-tighter">The Breakthrough.</h2>
-              <p className="text-lg text-gray-400 mt-4 mb-12 max-w-3xl mx-auto">The discovery of a proprietary feature, the "Trade Imbalance Ratio," gave us a real, defensible edge.</p>
+              <p className="text-lg text-gray-400 mt-4 mb-12 max-w-3xl mx-auto">The discovery of a proprietary feature, the 'Trade Imbalance Ratio,' gave us a real, defensible edge.</p>
               {!showResults && (<button onClick={() => setShowResults(true)} className="px-8 py-4 bg-white text-black font-semibold rounded-full text-lg hover:bg-gray-200 transition-colors">Reveal The Mini-Dashboard</button>)}
               {showResults && (<div className="bg-[#0A0A0A] border border-gray-800 rounded-xl p-6 md:p-8"><MiniDashboard /></div>)}
             </div>
@@ -86,7 +89,7 @@ export default function FreightPage() {
 
 // Mini-Dashboard Component
 function MiniDashboard() {
-    const [metrics, setMetrics] = useState<any>(null);
+    const [metrics, setMetrics] = useState<any>(null); // Using 'any' here for simplicity, can be typed further
     useEffect(() => { fetch('/atlas_v2_results_20250923_001400.json').then(res => res.json()).then(data => { setMetrics(data.performance_metrics); }); }, []);
     if (!metrics) return <div className="h-[500px] flex justify-center items-center"><p>Loading Dashboard Data...</p></div>;
     return (
@@ -125,7 +128,7 @@ function FinalChart({ dataUrl }: { dataUrl: string; }) {
     fetch(dataUrl).then(response => response.text()).then(csvText => {
         const lines = csvText.trim().split('\n'); const headers = lines[0].split(',').map(h => h.trim());
         const chartData = lines.slice(1).map(line => {
-          const values = line.split(','); const entry: any = {};
+          const values = line.split(','); const entry: any = {}; // 'any' is acceptable in this local scope
           headers.forEach((header, index) => { const value = parseFloat(values[index]); entry[header] = isNaN(value) ? null : value; });
           return { date: entry.date, actual: entry.actual, predicted: entry.predicted };
         });
